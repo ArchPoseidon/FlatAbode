@@ -101,6 +101,7 @@ export async function POST(req: NextRequest) {
       group_id: session.groupId,
       added_by: session.memberId,
       source_type: 'manual',
+      source_url: typeof body.source_url === 'string' && body.source_url.trim() ? body.source_url.trim() : null,
       title,
       description: typeof body.description === 'string' ? body.description : null,
       rent: typeof body.rent === 'number' ? body.rent : null,

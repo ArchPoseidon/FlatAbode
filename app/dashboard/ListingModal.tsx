@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import ApartmentArt from '@/components/ApartmentArt';
+import CoverPlaceholder from '@/components/CoverPlaceholder';
 import type { Listing, ListingScoreRow, ListingNoteRow, Member } from '@/lib/dashboard-types';
 import { MUST_HAVE_AMENITIES, NICE_TO_HAVE_TILES } from '@/lib/types';
 
@@ -80,7 +80,7 @@ export default function ListingModal({
             </div>
           ) : (
             <div className="relative h-48 w-full overflow-hidden">
-              <ApartmentArt className="absolute inset-0 w-full h-full" />
+              <CoverPlaceholder className="absolute inset-0 w-full h-full" />
             </div>
           )}
 

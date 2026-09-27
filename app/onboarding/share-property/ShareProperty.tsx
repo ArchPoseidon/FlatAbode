@@ -13,6 +13,7 @@ export default function ShareProperty() {
   const [manualRent, setManualRent] = useState('');
   const [manualBhk, setManualBhk] = useState('2');
   const [manualLocality, setManualLocality] = useState('');
+  const [manualUrl, setManualUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -30,7 +31,10 @@ export default function ShareProperty() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Could not add that listing.');
-        if (res.status === 422) setMode('manual');
+        if (res.status === 422) {
+          setManualUrl(url.trim());
+          setMode('manual');
+        }
         return;
       }
       setDone(true);
@@ -59,6 +63,7 @@ export default function ShareProperty() {
           rent: manualRent ? Number(manualRent) : null,
           bhk: manualBhk,
           locality: manualLocality.trim() || null,
+          source_url: manualUrl.trim() || null,
         }),
       });
       const data = await res.json();
@@ -89,6 +94,7 @@ export default function ShareProperty() {
                 onClick={() => {
                   setUrl('');
                   setManualTitle('');
+                  setManualUrl('');
                   setDone(false);
                 }}
               >
@@ -188,6 +194,12 @@ export default function ShareProperty() {
                   rows={3}
                   value={manualDescription}
                   onChange={(e) => setManualDescription(e.target.value)}
+                />
+                <input
+                  className="input"
+                  placeholder="Original listing URL (optional)"
+                  value={manualUrl}
+                  onChange={(e) => setManualUrl(e.target.value)}
                 />
                 {error && (
                   <p className="text-sm" style={{ color: 'var(--accent)' }}>

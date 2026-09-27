@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import ApartmentArt from '@/components/ApartmentArt';
 
 type Step = 'intro' | 'count' | 'names' | 'reveal';
 
@@ -73,7 +72,6 @@ export default function LandingWizard({ invalidLink }: { invalidLink: boolean })
 
   return (
     <main className="relative min-h-screen flex items-center justify-center px-6 py-16 overflow-hidden">
-      <ApartmentArt className="absolute inset-0 w-full h-full pointer-events-none" />
       <div className="relative w-full max-w-md">
         {invalidLink && step === 'intro' && (
           <p className="mb-6 text-sm text-center card" style={{ borderColor: 'var(--accent)' }}>

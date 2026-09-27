@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import ApartmentArt from '@/components/ApartmentArt';
+import CoverPlaceholder from '@/components/CoverPlaceholder';
 import type { Listing } from '@/lib/dashboard-types';
 
 export default function ListingCard({
@@ -38,7 +38,7 @@ export default function ListingCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={listing.cover_photo} alt={area} className="w-full h-full object-cover" />
         ) : (
-          <ApartmentArt className="absolute inset-0 w-full h-full" />
+          <CoverPlaceholder className="absolute inset-0 w-full h-full" />
         )}
         <button
           onClick={(e) => {
@@ -61,7 +61,21 @@ export default function ListingCard({
         )}
       </div>
       <div className="p-4">
-        <p className="font-semibold leading-tight">{area}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-semibold leading-tight">{area}</p>
+          {listing.source_url && (
+            <a
+              href={listing.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs flex-shrink-0"
+              style={{ color: 'var(--accent)' }}
+            >
+              View ↗
+            </a>
+          )}
+        </div>
         {metadata && (
           <p className="text-xs font-medium mt-1 inline-block px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
             {metadata}
