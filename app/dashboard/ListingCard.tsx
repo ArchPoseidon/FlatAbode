@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import ApartmentArt from '@/components/ApartmentArt';
 import type { Listing } from '@/lib/dashboard-types';
 
 export default function ListingCard({
@@ -16,6 +17,14 @@ export default function ListingCard({
   onOpen: () => void;
   onToggleLove: () => void;
 }) {
+  const area = listing.locality || listing.title || 'Untitled listing';
+  const metadata = [
+    listing.bhk ? `${listing.bhk} BHK` : null,
+    listing.rent ? `₹${listing.rent.toLocaleString('en-IN')}/mo` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <motion.div
       layoutId={`card-${listing.id}`}
@@ -24,12 +33,12 @@ export default function ListingCard({
       whileHover={{ y: -4 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
     >
-      <div className="relative w-full aspect-[4/3]" style={{ background: 'var(--accent-soft)' }}>
+      <div className="relative w-full aspect-[4/3] overflow-hidden" style={{ background: 'var(--accent-soft)' }}>
         {listing.cover_photo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={listing.cover_photo} alt={listing.title ?? ''} className="w-full h-full object-cover" />
+          <img src={listing.cover_photo} alt={area} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">🏠</div>
+          <ApartmentArt className="absolute inset-0 w-full h-full" />
         )}
         <button
           onClick={(e) => {
@@ -52,14 +61,17 @@ export default function ListingCard({
         )}
       </div>
       <div className="p-4">
-        <p className="font-semibold leading-tight">
-          {listing.title || listing.locality || 'Untitled listing'}
-        </p>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-          {[listing.bhk ? `${listing.bhk} BHK` : null, listing.locality, listing.rent ? `₹${listing.rent.toLocaleString('en-IN')}/mo` : null]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
+        <p className="font-semibold leading-tight">{area}</p>
+        {metadata && (
+          <p className="text-xs font-medium mt-1 inline-block px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
+            {metadata}
+          </p>
+        )}
+        {listing.description && (
+          <p className="text-sm mt-2 line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+            {listing.description}
+          </p>
+        )}
       </div>
     </motion.div>
   );

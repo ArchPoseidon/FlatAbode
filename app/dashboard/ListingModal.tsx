@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import ApartmentArt from '@/components/ApartmentArt';
 import type { Listing, ListingScoreRow, ListingNoteRow, Member } from '@/lib/dashboard-types';
 import { MUST_HAVE_AMENITIES, NICE_TO_HAVE_TILES } from '@/lib/types';
 
@@ -65,7 +66,7 @@ export default function ListingModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="overflow-y-auto">
-          {photos.length > 0 && (
+          {photos.length > 0 ? (
             <div className="flex gap-2 overflow-x-auto p-3" style={{ background: 'var(--bg)' }}>
               {photos.map((src, i) => (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -77,11 +78,15 @@ export default function ListingModal({
                 />
               ))}
             </div>
+          ) : (
+            <div className="relative h-48 w-full overflow-hidden">
+              <ApartmentArt className="absolute inset-0 w-full h-full" />
+            </div>
           )}
 
           <div className="p-6 md:p-8">
             <div className="flex items-start justify-between gap-4 mb-1">
-              <h2 className="font-display text-2xl">{listing.title || 'Untitled listing'}</h2>
+              <h2 className="font-display text-2xl">{listing.locality || listing.title || 'Untitled listing'}</h2>
               <button
                 onClick={onToggleLove}
                 className="w-11 h-11 rounded-full flex items-center justify-center text-xl flex-shrink-0"
@@ -91,11 +96,16 @@ export default function ListingModal({
                 {loved ? '❤️' : '🤍'}
               </button>
             </div>
-            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
-              {[listing.bhk ? `${listing.bhk} BHK` : null, listing.locality, listing.rent ? `₹${listing.rent.toLocaleString('en-IN')}/month` : null]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
+            {(listing.bhk || listing.rent) && (
+              <p
+                className="text-xs font-medium mb-4 inline-block px-2.5 py-1 rounded-full"
+                style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}
+              >
+                {[listing.bhk ? `${listing.bhk} BHK` : null, listing.rent ? `₹${listing.rent.toLocaleString('en-IN')}/month` : null]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            )}
 
             {listing.description && <p className="text-sm mb-6">{listing.description}</p>}
 

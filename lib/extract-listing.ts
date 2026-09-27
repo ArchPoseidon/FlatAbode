@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NICE_TO_HAVE_TILES } from './types';
 
 const MAX_MARKDOWN_CHARS = 12000;
+const MIN_CONTENT_CHARS = 200;
 const AMENITY_KEYS = NICE_TO_HAVE_TILES.map((t) => t.key);
 
 export interface ExtractedListing {
@@ -19,6 +20,16 @@ export interface ExtractedListing {
 const RESPONSE_SCHEMA = {
   type: 'object',
   properties: {
+    is_valid_listing: {
+      type: 'boolean',
+      description:
+        'False if the page content is a block/error/captcha/login page, or otherwise does not actually describe a rental property.',
+    },
+    block_reason: {
+      type: 'string',
+      nullable: true,
+      description: 'If is_valid_listing is false, a short reason why (e.g. "page blocked access", "login required").',
+    },
     rent: { type: 'number', nullable: true, description: 'Monthly rent in INR, digits only' },
     bhk: { type: 'string', nullable: true, description: 'e.g. "1", "2", "3", "4", "4+"' },
     locality: { type: 'string', nullable: true, description: 'Bangalore neighbourhood/locality name' },
@@ -40,10 +51,12 @@ const RESPONSE_SCHEMA = {
         'One factual sentence describing the property: size/locality/floor/key features/rent. No em dashes.',
     },
   },
-  required: ['title', 'description'],
+  required: ['is_valid_listing', 'title', 'description'],
 };
 
-const EXTRACTION_PROMPT = `You are extracting structured facts about a Bangalore rental property listing from scraped page content. Only report fields that are explicitly stated or very clearly implied in the content — return null (or omit from amenities) for anything not mentioned. Do not guess or invent values. Rent must be a plain number in INR. Return JSON only, matching the given schema.`;
+const EXTRACTION_PROMPT = `You are extracting structured facts about a Bangalore rental property listing from scraped page content. First decide whether the content actually describes a rental property listing — set is_valid_listing to false (with a short block_reason) if the page is a block page, CAPTCHA, login wall, error page, or otherwise doesn't contain real listing details. Otherwise, only report fields that are explicitly stated or very clearly implied — return null (or omit from amenities) for anything not mentioned. Do not guess or invent values. Rent must be a plain number in INR. Return JSON only, matching the given schema.`;
+
+const BLOCK_SIGNALS = /\b(access denied|blocked|are you a human|captcha|checking your browser|just a moment|unusual traffic|please verify|forbidden|robot check|sign in to continue|log in to view)\b/i;
 
 function isLikelyPhotoUrl(url: string): boolean {
   return /\.(jpe?g|png|webp|avif)(\?|$)/i.test(url) && !/logo|icon|sprite|avatar/i.test(url);
@@ -52,11 +65,19 @@ function isLikelyPhotoUrl(url: string): boolean {
 export async function extractListingFromUrl(url: string): Promise<ExtractedListing> {
   const firecrawl = new Firecrawl({ apiKey: process.env.FIRECRAWL_API_KEY! });
 
-  const doc = await firecrawl.scrape(url, { formats: ['markdown', 'images'] });
+  const doc = await firecrawl.scrape(url, { formats: ['markdown', 'images'], proxy: 'auto' });
 
-  const markdown = (doc.markdown ?? '').slice(0, MAX_MARKDOWN_CHARS);
-  if (!markdown.trim()) {
+  const statusCode = doc.metadata?.statusCode;
+  if (statusCode && statusCode >= 400) {
+    throw new Error(`That site returned an error (${statusCode}) — it may be blocking automated requests.`);
+  }
+
+  const markdown = (doc.markdown ?? '').trim();
+  if (!markdown) {
     throw new Error('Could not read any content from that URL.');
+  }
+  if (markdown.length < MIN_CONTENT_CHARS || BLOCK_SIGNALS.test(markdown)) {
+    throw new Error("That site blocked the request, so there's nothing real to extract.");
   }
 
   const photos = Array.from(new Set((doc.images ?? []).filter(isLikelyPhotoUrl))).slice(0, 8);
@@ -73,12 +94,18 @@ export async function extractListingFromUrl(url: string): Promise<ExtractedListi
   const result = await model.generateContent([
     EXTRACTION_PROMPT,
     `Page title: ${doc.metadata?.title ?? ''}`,
-    `Page content:\n${markdown}`,
+    `Page content:\n${markdown.slice(0, MAX_MARKDOWN_CHARS)}`,
   ]);
 
   const parsed = JSON.parse(result.response.text());
 
+  if (parsed.is_valid_listing === false) {
+    throw new Error(parsed.block_reason || "That page doesn't look like a real listing.");
+  }
+
   const { title, description, ...fields } = parsed;
+  delete fields.is_valid_listing;
+  delete fields.block_reason;
 
   return {
     title: title || 'Untitled listing',

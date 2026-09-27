@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import HeroArt from '@/components/HeroArt';
+import ApartmentArt from '@/components/ApartmentArt';
 import ListingCard from './ListingCard';
 import ListingModal from './ListingModal';
 import type { DashboardPayload, ListingScoreRow } from '@/lib/dashboard-types';
@@ -78,11 +78,7 @@ export default function Dashboard({
   }
 
   return (
-    <div className="relative min-h-screen flex">
-      <div className="fixed inset-0 opacity-25 blur-[2px]">
-        <HeroArt className="w-full h-full" />
-      </div>
-
+    <div className="relative min-h-screen flex" style={{ background: 'var(--bg)' }}>
       <aside
         className="relative z-10 w-60 flex-shrink-0 hidden md:flex flex-col justify-between p-6"
         style={{ borderRight: '1px solid var(--border)', background: 'var(--bg)' }}
@@ -116,44 +112,59 @@ export default function Dashboard({
           <a href="/onboarding/share-property" className="btn-primary block text-center mb-4 text-sm">
             + Add a property
           </a>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            {currentMemberName}
-          </p>
+          <a
+            href="/api/logout"
+            className="text-xs hover:underline"
+            style={{ color: 'var(--text-muted)' }}
+            title="Log out"
+          >
+            {currentMemberName} · Log out
+          </a>
         </div>
       </aside>
 
-      <main className="relative z-10 flex-1 p-6 md:p-10">
-        <h1 className="font-display text-3xl mb-1">
-          {tab === 'all' ? 'Properties everyone agrees on' : 'Properties you loved'}
-        </h1>
-        <p className="text-sm mb-8" style={{ color: 'var(--text-muted)' }}>
-          {onboardedCount < data.members.length
-            ? `${data.members.length - onboardedCount} of your group still haven't finished onboarding.`
-            : `Matched across all ${onboardedCount} of you.`}
-        </p>
+      <main className="relative z-10 flex-1 flex flex-col">
+        <div className="relative w-full overflow-hidden" style={{ height: 280 }}>
+          <ApartmentArt className="absolute inset-0 w-full h-full" />
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(to top, var(--bg) 0%, transparent 60%)' }}
+          />
+        </div>
 
-        {visibleListings.length === 0 ? (
-          <div className="card max-w-md">
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              {tab === 'all'
-                ? 'Nothing qualifies for everyone yet — add a property to get started.'
-                : "You haven't loved anything yet — tap the heart on a card to save it here."}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {visibleListings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                loved={lovedIds.has(listing.id)}
-                qualifies={qualifiedIds.has(listing.id)}
-                onOpen={() => setOpenListingId(listing.id)}
-                onToggleLove={() => toggleLove(listing.id)}
-              />
-            ))}
-          </div>
-        )}
+        <div className="p-6 md:p-10 pt-8">
+          <h1 className="font-display text-3xl mb-1">
+            {tab === 'all' ? 'Properties everyone agrees on' : 'Properties you loved'}
+          </h1>
+          <p className="text-sm mb-8" style={{ color: 'var(--text-muted)' }}>
+            {onboardedCount < data.members.length
+              ? `${data.members.length - onboardedCount} of your group still haven't finished onboarding.`
+              : `Matched across all ${onboardedCount} of you.`}
+          </p>
+
+          {visibleListings.length === 0 ? (
+            <div className="card max-w-md">
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                {tab === 'all'
+                  ? 'Nothing qualifies for everyone yet — add a property to get started.'
+                  : "You haven't loved anything yet — tap the heart on a card to save it here."}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {visibleListings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  loved={lovedIds.has(listing.id)}
+                  qualifies={qualifiedIds.has(listing.id)}
+                  onOpen={() => setOpenListingId(listing.id)}
+                  onToggleLove={() => toggleLove(listing.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       <AnimatePresence>

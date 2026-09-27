@@ -24,21 +24,6 @@
   --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1c1815;
-    --bg-raised: #241f1a;
-    --card: #241f1a;
-    --border: #362f28;
-    --text-primary: #f3ede2;
-    --text-muted: #a89d8c;
-    --accent: #e08a5f;
-    --accent-foreground: #241f1a;
-    --accent-soft: #3a2a20;
-    --success: #7fb08a;
-  }
-}
-
 body {
   background: var(--bg);
   color: var(--text-primary);
