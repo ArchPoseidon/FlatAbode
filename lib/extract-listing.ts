@@ -87,7 +87,11 @@ export async function extractListingFromUrl(url: string): Promise<ExtractedListi
   if (!markdown) {
     throw new Error('Could not read any content from that URL.');
   }
-  if (markdown.length < MIN_CONTENT_CHARS || BLOCK_SIGNALS.test(markdown)) {
+  // A genuine block/CAPTCHA page puts its message immediately — the whole
+  // page IS the message. Only scan the prefix, so an unrelated ad/tracker
+  // iframe snippet ("...is blocked. Try disabling your extensions.") buried
+  // deep in an otherwise-real, long listing page doesn't cause a false hit.
+  if (markdown.length < MIN_CONTENT_CHARS || BLOCK_SIGNALS.test(markdown.slice(0, 2000))) {
     throw new Error("That site blocked the request, so there's nothing real to extract.");
   }
 
