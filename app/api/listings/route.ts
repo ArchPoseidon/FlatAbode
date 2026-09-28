@@ -69,15 +69,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ listing: updated ?? listing });
     } catch (err) {
       console.error('Extraction failed:', err);
+      const reason = err instanceof Error ? err.message : 'Extraction failed.';
       await supabase
         .from('listings')
-        .update({
-          status: 'failed',
-          error_message: err instanceof Error ? err.message : 'Extraction failed.',
-        })
+        .update({ status: 'failed', error_message: reason })
         .eq('id', listing.id);
       return NextResponse.json(
-        { error: "Couldn't read that listing automatically. You can add it manually instead." },
+        { error: `${reason} You can add it manually instead.` },
         { status: 422 }
       );
     }

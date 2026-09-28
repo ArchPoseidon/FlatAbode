@@ -58,8 +58,19 @@ const EXTRACTION_PROMPT = `You are extracting structured facts about a Bangalore
 
 const BLOCK_SIGNALS = /\b(access denied|blocked|are you a human|captcha|checking your browser|just a moment|unusual traffic|please verify|forbidden|robot check|sign in to continue|log in to view)\b/i;
 
+const CHROME_PATTERNS = /logo|icon|sprite|avatar|placeholder|fallback|default|badge|banner|\buser\.|\bshop\d*\.|\/assets\/|\/common\/|\/news\/|wp-content/i;
+// Real property photos are typically served from a hashed/random path segment
+// (e.g. "01c16c28/22e442124.../medium.jpg"); site-chrome assets usually aren't.
+const HASHED_PATH = /\/[a-f0-9]{6,}\//i;
+
 function isLikelyPhotoUrl(url: string): boolean {
-  return /\.(jpe?g|png|webp|avif)(\?|$)/i.test(url) && !/logo|icon|sprite|avatar/i.test(url);
+  return /\.(jpe?g|png|webp|avif)(\?|$)/i.test(url) && !CHROME_PATTERNS.test(url);
+}
+
+// Puts photos that look like real uploaded property images first, so the
+// cover photo isn't a generic site icon that merely happened to load earlier.
+function rankPhotos(urls: string[]): string[] {
+  return [...urls].sort((a, b) => Number(HASHED_PATH.test(b)) - Number(HASHED_PATH.test(a)));
 }
 
 export async function extractListingFromUrl(url: string): Promise<ExtractedListing> {
@@ -80,7 +91,7 @@ export async function extractListingFromUrl(url: string): Promise<ExtractedListi
     throw new Error("That site blocked the request, so there's nothing real to extract.");
   }
 
-  const photos = Array.from(new Set((doc.images ?? []).filter(isLikelyPhotoUrl))).slice(0, 8);
+  const photos = rankPhotos(Array.from(new Set((doc.images ?? []).filter(isLikelyPhotoUrl)))).slice(0, 8);
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
   const model = genAI.getGenerativeModel({
