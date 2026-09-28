@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { extractListingFromUrl } from '@/lib/extract-listing';
 import { rescoreListing } from '@/lib/rescore';
 import { getDashboardData } from '@/lib/listings-data';
+import { generateNickname } from '@/lib/nickname';
 
 export async function GET() {
   const session = await getSession();
@@ -47,10 +48,11 @@ export async function POST(req: NextRequest) {
 
     try {
       const extracted = await extractListingFromUrl(url);
-      const { data: updated } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from('listings')
         .update({
           title: extracted.title,
+          nickname: extracted.nickname,
           description: extracted.description,
           rent: extracted.rent,
           bhk: extracted.bhk,
@@ -64,9 +66,13 @@ export async function POST(req: NextRequest) {
         .select()
         .single();
 
+      if (updateError || !updated) {
+        throw new Error(updateError?.message || 'Could not save the extracted listing.');
+      }
+
       await rescoreListing(listing.id, session.groupId, extracted.extracted_fields);
 
-      return NextResponse.json({ listing: updated ?? listing });
+      return NextResponse.json({ listing: updated });
     } catch (err) {
       console.error('Extraction failed:', err);
       const reason = err instanceof Error ? err.message : 'Extraction failed.';
@@ -85,6 +91,9 @@ export async function POST(req: NextRequest) {
   const title = typeof body.title === 'string' ? body.title.trim() : '';
   if (!title) return NextResponse.json({ error: 'A title is required.' }, { status: 400 });
 
+  const manualLocality = typeof body.locality === 'string' ? body.locality : null;
+  const nickname = generateNickname(title, manualLocality);
+
   const extractedFields = {
     lift: typeof body.lift === 'boolean' ? body.lift : null,
     power_backup: typeof body.power_backup === 'boolean' ? body.power_backup : null,
@@ -101,10 +110,11 @@ export async function POST(req: NextRequest) {
       source_type: 'manual',
       source_url: typeof body.source_url === 'string' && body.source_url.trim() ? body.source_url.trim() : null,
       title,
+      nickname,
       description: typeof body.description === 'string' ? body.description : null,
       rent: typeof body.rent === 'number' ? body.rent : null,
       bhk: typeof body.bhk === 'string' ? body.bhk : null,
-      locality: typeof body.locality === 'string' ? body.locality : null,
+      locality: manualLocality,
       extracted_fields: extractedFields,
       status: 'ready',
     })

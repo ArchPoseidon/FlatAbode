@@ -1,6 +1,7 @@
 import Firecrawl from '@mendable/firecrawl-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { NICE_TO_HAVE_TILES } from './types';
+import { NICE_TO_HAVE_TILES, normalizeBhk } from './types';
+import { generateNickname } from './nickname';
 
 const MAX_MARKDOWN_CHARS = 12000;
 const MIN_CONTENT_CHARS = 200;
@@ -8,6 +9,7 @@ const AMENITY_KEYS = NICE_TO_HAVE_TILES.map((t) => t.key);
 
 export interface ExtractedListing {
   title: string;
+  nickname: string;
   description: string;
   rent: number | null;
   bhk: string | null;
@@ -44,14 +46,20 @@ const RESPONSE_SCHEMA = {
       items: { type: 'string', enum: AMENITY_KEYS },
       description: 'Only amenities explicitly mentioned in the content, using these exact keys.',
     },
-    title: { type: 'string', description: 'Short listing title, e.g. "2BHK in Koramangala"' },
+    title: { type: 'string', description: 'Short factual listing title, e.g. "2BHK in Koramangala"' },
+    nickname: {
+      type: 'string',
+      description:
+        'A short, catchy 2-5 word nickname for this specific property, distinct from the factual title — ' +
+        'e.g. "The Cozy Koramangala Corner", "Sunny HSR Retreat". Playful but not silly.',
+    },
     description: {
       type: 'string',
       description:
         'One factual sentence describing the property: size/locality/floor/key features/rent. No em dashes.',
     },
   },
-  required: ['is_valid_listing', 'title', 'description'],
+  required: ['is_valid_listing', 'title', 'nickname', 'description'],
 };
 
 const EXTRACTION_PROMPT = `You are extracting structured facts about a Bangalore rental property listing from scraped page content. First decide whether the content actually describes a rental property listing — set is_valid_listing to false (with a short block_reason) if the page is a block page, CAPTCHA, login wall, error page, or otherwise doesn't contain real listing details. Otherwise, only report fields that are explicitly stated or very clearly implied — return null (or omit from amenities) for anything not mentioned. Do not guess or invent values. Rent must be a plain number in INR. Return JSON only, matching the given schema.`;
@@ -118,16 +126,21 @@ export async function extractListingFromUrl(url: string): Promise<ExtractedListi
     throw new Error(parsed.block_reason || "That page doesn't look like a real listing.");
   }
 
-  const { title, description, ...fields } = parsed;
+  const { title, nickname, description, ...fields } = parsed;
   delete fields.is_valid_listing;
   delete fields.block_reason;
 
+  const bhk = normalizeBhk(typeof fields.bhk === 'string' ? fields.bhk : null);
+  fields.bhk = bhk;
+  const locality = typeof fields.locality === 'string' ? fields.locality : null;
+
   return {
     title: title || 'Untitled listing',
+    nickname: (typeof nickname === 'string' && nickname.trim()) || generateNickname(url, locality),
     description: description || '',
     rent: typeof fields.rent === 'number' ? fields.rent : null,
-    bhk: typeof fields.bhk === 'string' ? fields.bhk : null,
-    locality: typeof fields.locality === 'string' ? fields.locality : null,
+    bhk,
+    locality,
     photos,
     cover_photo: photos[0] ?? null,
     extracted_fields: fields,

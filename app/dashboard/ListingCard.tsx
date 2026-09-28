@@ -2,18 +2,24 @@
 
 import { motion } from 'framer-motion';
 import CoverPlaceholder from '@/components/CoverPlaceholder';
+import HeartIcon from '@/components/HeartIcon';
+import { labelFor, MUST_HAVE_AMENITIES } from '@/lib/types';
 import type { Listing } from '@/lib/dashboard-types';
+
+const MUST_HAVE_KEYS = MUST_HAVE_AMENITIES.map((a) => a.key);
 
 export default function ListingCard({
   listing,
   loved,
   qualifies,
+  compromises,
   onOpen,
   onToggleLove,
 }: {
   listing: Listing;
   loved: boolean;
   qualifies: boolean;
+  compromises: { name: string; missing: string[] }[];
   onOpen: () => void;
   onToggleLove: () => void;
 }) {
@@ -25,6 +31,12 @@ export default function ListingCard({
     .filter(Boolean)
     .join(' · ');
 
+  const fields = (listing.extracted_fields ?? {}) as Record<string, unknown>;
+  const confirmedAmenities = [
+    ...MUST_HAVE_KEYS.filter((k) => fields[k] === true),
+    ...((Array.isArray(fields.amenities) ? (fields.amenities as string[]) : [])),
+  ];
+
   return (
     <motion.div
       layoutId={`card-${listing.id}`}
@@ -33,7 +45,7 @@ export default function ListingCard({
       whileHover={{ y: -4 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
     >
-      <div className="relative w-full aspect-[4/3] overflow-hidden" style={{ background: 'var(--accent-soft)' }}>
+      <div className="relative w-full overflow-hidden" style={{ background: 'var(--accent-soft)', aspectRatio: '16 / 7' }}>
         {listing.cover_photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={listing.cover_photo} alt={area} className="w-full h-full object-cover" />
@@ -45,11 +57,11 @@ export default function ListingCard({
             e.stopPropagation();
             onToggleLove();
           }}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-lg"
-          style={{ background: 'rgba(0,0,0,0.45)' }}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.45)', color: 'white' }}
           aria-label={loved ? 'Unlove' : 'Love'}
         >
-          {loved ? '❤️' : '🤍'}
+          <HeartIcon filled={loved} />
         </button>
         {qualifies && (
           <span
@@ -61,30 +73,33 @@ export default function ListingCard({
         )}
       </div>
       <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-semibold leading-tight">{area}</p>
-          {listing.source_url && (
-            <a
-              href={listing.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="text-xs flex-shrink-0"
-              style={{ color: 'var(--accent)' }}
-            >
-              View ↗
-            </a>
-          )}
-        </div>
-        {metadata && (
-          <p className="text-xs font-medium mt-1 inline-block px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
-            {metadata}
-          </p>
+        <p className="font-display text-lg leading-tight">{listing.nickname || area}</p>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          {[area, metadata].filter(Boolean).join(' · ')}
+        </p>
+
+        {confirmedAmenities.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {confirmedAmenities.map((k) => (
+              <span
+                key={k}
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}
+              >
+                {labelFor(k)}
+              </span>
+            ))}
+          </div>
         )}
-        {listing.description && (
-          <p className="text-sm mt-2 line-clamp-2" style={{ color: 'var(--text-muted)' }}>
-            {listing.description}
-          </p>
+
+        {compromises.length > 0 && (
+          <div className="mt-3 pt-3 flex flex-col gap-1" style={{ borderTop: '1px solid var(--border)' }}>
+            {compromises.map((c) => (
+              <p key={c.name} className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                <span className="font-medium">{c.name}</span> gives up: {c.missing.map(labelFor).join(', ')}
+              </p>
+            ))}
+          </div>
         )}
       </div>
     </motion.div>

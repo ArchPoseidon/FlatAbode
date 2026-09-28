@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     {
       member_id: session.memberId,
       budget_max: typeof body.budget_max === 'number' ? body.budget_max : null,
-      bhk: typeof body.bhk === 'string' ? body.bhk : null,
+      bhk: Array.isArray(body.bhk) ? body.bhk : [],
       locations: body.locations,
       must_have_amenities: Array.isArray(body.must_have_amenities) ? body.must_have_amenities : [],
       custom_must_haves: Array.isArray(body.custom_must_haves) ? body.custom_must_haves : [],

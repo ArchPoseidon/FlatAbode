@@ -19,7 +19,7 @@ export function useOnboarding(initial: Preferences | null) {
   const router = useRouter();
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [budget, setBudget] = useState(initial?.budget_max ?? 35000);
-  const [bhk, setBhk] = useState<string>(initial?.bhk ?? '2');
+  const [bhk, setBhk] = useState<string[]>(initial?.bhk ?? []);
   const [locationQuery, setLocationQuery] = useState('');
   const [locations, setLocations] = useState<string[]>(initial?.locations ?? []);
   const [mustHaveAmenities, setMustHaveAmenities] = useState<string[]>(
@@ -46,6 +46,10 @@ export function useOnboarding(initial: Preferences | null) {
 
   function removeLocation(loc: string) {
     setLocations((prev) => prev.filter((l) => l !== loc));
+  }
+
+  function toggleBhk(key: string) {
+    setBhk((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   }
 
   function toggleAmenity(key: string) {
@@ -120,7 +124,7 @@ export function useOnboarding(initial: Preferences | null) {
     budget,
     setBudget,
     bhk,
-    setBhk,
+    toggleBhk,
     bhkOptions: BHK_OPTIONS,
     locationQuery,
     setLocationQuery,

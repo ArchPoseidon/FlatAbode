@@ -11,7 +11,7 @@ export interface Member {
 export interface Preferences {
   member_id: string;
   budget_max: number | null;
-  bhk: string | null;
+  bhk: string[];
   locations: string[];
   floor_pref: string | null;
   must_have_amenities: string[];
@@ -45,3 +45,23 @@ export const NICE_TO_HAVE_TILES = [
 ] as const;
 
 export const BHK_OPTIONS = ['1', '2', '3', '4', '4+'] as const;
+
+const LABELS: Record<string, string> = Object.fromEntries([
+  ...MUST_HAVE_AMENITIES.map((a) => [a.key, a.label]),
+  ...NICE_TO_HAVE_TILES.map((t) => [t.key, t.label]),
+  ['budget', 'Budget'],
+  ['bhk', 'BHK'],
+  ['locality', 'Location'],
+]);
+
+export function labelFor(key: string): string {
+  return LABELS[key] ?? key;
+}
+
+// Extraction sometimes returns "3 BHK" instead of "3" despite the prompt —
+// normalize to just the leading number (or "4+") so matching stays exact.
+export function normalizeBhk(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const match = value.match(/(\d\+?)/);
+  return match ? match[1] : null;
+}

@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import ApartmentArt from '@/components/ApartmentArt';
 import ListingCard from './ListingCard';
 import ListingModal from './ListingModal';
-import type { DashboardPayload, ListingScoreRow } from '@/lib/dashboard-types';
+import AddPropertyModal from './AddPropertyModal';
+import { computeCompromises } from '@/lib/scoring';
+import type { DashboardPayload, ListingScoreRow, Listing } from '@/lib/dashboard-types';
 
 type Tab = 'all' | 'loved';
 
@@ -21,6 +22,7 @@ export default function Dashboard({
   const [data, setData] = useState(initialData);
   const [tab, setTab] = useState<Tab>('all');
   const [openListingId, setOpenListingId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const onboardedCount = data.members.filter((m) => m.onboarded_at).length;
 
@@ -42,6 +44,22 @@ export default function Dashboard({
     () => new Set(data.reactions.filter((r) => r.member_id === currentMemberId && r.loved).map((r) => r.listing_id)),
     [data.reactions, currentMemberId]
   );
+
+  // Per listing, which onboarded members would be giving up a nice-to-have they wanted.
+  const compromisesByListing = useMemo(() => {
+    const map = new Map<string, { name: string; missing: string[] }[]>();
+    for (const score of data.scores) {
+      const prefs = data.preferences.find((p) => p.member_id === score.member_id);
+      const member = data.members.find((m) => m.id === score.member_id);
+      if (!prefs || !member || prefs.nice_to_haves.length === 0) continue;
+      const missing = computeCompromises(prefs.nice_to_haves, score.nice_to_haves_met);
+      if (missing.length === 0) continue;
+      const list = map.get(score.listing_id) ?? [];
+      list.push({ name: member.name, missing });
+      map.set(score.listing_id, list);
+    }
+    return map;
+  }, [data.scores, data.preferences, data.members]);
 
   const readyListings = data.listings.filter((l) => l.status === 'ready');
   const visibleListings =
@@ -77,6 +95,14 @@ export default function Dashboard({
     }
   }
 
+  function handleAdded(listing: Listing) {
+    setData((prev) => ({ ...prev, listings: [listing, ...prev.listings] }));
+    fetch('/api/listings')
+      .then((r) => r.json())
+      .then((fresh) => setData((prev) => ({ ...prev, scores: fresh.scores ?? prev.scores })))
+      .catch(() => {});
+  }
+
   return (
     <div className="relative min-h-screen flex" style={{ background: 'var(--bg)' }}>
       <aside
@@ -104,14 +130,21 @@ export default function Dashboard({
                 color: tab === 'loved' ? 'var(--accent)' : 'var(--text-primary)',
               }}
             >
-              Loved ❤️
+              Loved
             </button>
+            <a
+              href="/dashboard/profile"
+              className="text-left px-3 py-2 rounded-xl text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Profile
+            </a>
           </nav>
         </div>
         <div>
-          <a href="/onboarding/share-property" className="btn-primary block text-center mb-4 text-sm">
+          <button className="btn-primary block w-full text-center mb-4 text-sm" onClick={() => setShowAddModal(true)}>
             + Add a property
-          </a>
+          </button>
           <a
             href="/api/logout"
             className="text-xs hover:underline"
@@ -124,15 +157,7 @@ export default function Dashboard({
       </aside>
 
       <main className="relative z-10 flex-1 flex flex-col">
-        <div className="relative w-full overflow-hidden" style={{ height: 280 }}>
-          <ApartmentArt className="absolute inset-0 w-full h-full" />
-          <div
-            className="absolute inset-0"
-            style={{ background: 'linear-gradient(to top, var(--bg) 0%, transparent 60%)' }}
-          />
-        </div>
-
-        <div className="p-6 md:p-10 pt-8">
+        <div className="p-6 md:p-10">
           <h1 className="font-display text-3xl mb-1">
             {tab === 'all' ? 'Properties everyone agrees on' : 'Properties you loved'}
           </h1>
@@ -151,13 +176,14 @@ export default function Dashboard({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {visibleListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   listing={listing}
                   loved={lovedIds.has(listing.id)}
                   qualifies={qualifiedIds.has(listing.id)}
+                  compromises={compromisesByListing.get(listing.id) ?? []}
                   onOpen={() => setOpenListingId(listing.id)}
                   onToggleLove={() => toggleLove(listing.id)}
                 />
@@ -180,6 +206,10 @@ export default function Dashboard({
             onAddNote={(body) => addNote(openListing.id, body)}
           />
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAddModal && <AddPropertyModal onClose={() => setShowAddModal(false)} onAdded={handleAdded} />}
       </AnimatePresence>
     </div>
   );

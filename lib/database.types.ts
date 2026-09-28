@@ -41,7 +41,7 @@ export interface Database {
         Row: {
           member_id: string;
           budget_max: number | null;
-          bhk: string | null;
+          bhk: string[];
           locations: string[];
           floor_pref: string | null;
           must_have_amenities: string[];
@@ -52,7 +52,7 @@ export interface Database {
         Insert: {
           member_id: string;
           budget_max?: number | null;
-          bhk?: string | null;
+          bhk?: string[];
           locations?: string[];
           floor_pref?: string | null;
           must_have_amenities?: string[];
@@ -63,7 +63,7 @@ export interface Database {
         Update: {
           member_id?: string;
           budget_max?: number | null;
-          bhk?: string | null;
+          bhk?: string[];
           locations?: string[];
           floor_pref?: string | null;
           must_have_amenities?: string[];
@@ -81,6 +81,7 @@ export interface Database {
           source_type: 'url' | 'manual';
           source_url: string | null;
           title: string | null;
+          nickname: string | null;
           description: string | null;
           rent: number | null;
           bhk: string | null;
@@ -100,6 +101,7 @@ export interface Database {
           source_type: 'url' | 'manual';
           source_url?: string | null;
           title?: string | null;
+          nickname?: string | null;
           description?: string | null;
           rent?: number | null;
           bhk?: string | null;
@@ -119,6 +121,7 @@ export interface Database {
           source_type?: 'url' | 'manual';
           source_url?: string | null;
           title?: string | null;
+          nickname?: string | null;
           description?: string | null;
           rent?: number | null;
           bhk?: string | null;

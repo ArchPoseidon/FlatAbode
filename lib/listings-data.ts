@@ -6,6 +6,7 @@ type ListingScoreRow = Database['public']['Tables']['listing_scores']['Row'];
 type ListingReactionRow = Database['public']['Tables']['listing_reactions']['Row'];
 type ListingNoteRow = Database['public']['Tables']['listing_notes']['Row'];
 type Member = Database['public']['Tables']['members']['Row'];
+type PreferencesRow = Database['public']['Tables']['preferences']['Row'];
 
 export interface DashboardData {
   listings: Listing[];
@@ -13,6 +14,7 @@ export interface DashboardData {
   reactions: ListingReactionRow[];
   notes: ListingNoteRow[];
   members: Member[];
+  preferences: PreferencesRow[];
 }
 
 export async function getDashboardData(groupId: string): Promise<DashboardData> {
@@ -25,11 +27,14 @@ export async function getDashboardData(groupId: string): Promise<DashboardData> 
 
   const listingIds = (listings ?? []).map((l) => l.id);
   const emptyFilter = listingIds.length ? listingIds : ['00000000-0000-0000-0000-000000000000'];
+  const memberIds = (members ?? []).map((m) => m.id);
+  const emptyMemberFilter = memberIds.length ? memberIds : ['00000000-0000-0000-0000-000000000000'];
 
-  const [{ data: scores }, { data: reactions }, { data: notes }] = await Promise.all([
+  const [{ data: scores }, { data: reactions }, { data: notes }, { data: preferences }] = await Promise.all([
     supabase.from('listing_scores').select('*').in('listing_id', emptyFilter),
     supabase.from('listing_reactions').select('*').in('listing_id', emptyFilter),
     supabase.from('listing_notes').select('*').in('listing_id', emptyFilter).order('created_at', { ascending: true }),
+    supabase.from('preferences').select('*').in('member_id', emptyMemberFilter),
   ]);
 
   return {
@@ -38,6 +43,7 @@ export async function getDashboardData(groupId: string): Promise<DashboardData> 
     reactions: reactions ?? [],
     notes: notes ?? [],
     members: members ?? [],
+    preferences: preferences ?? [],
   };
 }
 

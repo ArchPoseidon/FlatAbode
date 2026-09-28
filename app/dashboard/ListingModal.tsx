@@ -3,20 +3,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import CoverPlaceholder from '@/components/CoverPlaceholder';
+import HeartIcon from '@/components/HeartIcon';
 import type { Listing, ListingScoreRow, ListingNoteRow, Member } from '@/lib/dashboard-types';
-import { MUST_HAVE_AMENITIES, NICE_TO_HAVE_TILES } from '@/lib/types';
-
-const LABELS: Record<string, string> = Object.fromEntries([
-  ...MUST_HAVE_AMENITIES.map((a) => [a.key, a.label]),
-  ...NICE_TO_HAVE_TILES.map((t) => [t.key, t.label]),
-  ['budget', 'Budget'],
-  ['bhk', 'BHK'],
-  ['locality', 'Location'],
-]);
-
-function label(key: string) {
-  return LABELS[key] ?? key;
-}
+import { labelFor as label } from '@/lib/types';
 
 export default function ListingModal({
   listing,
@@ -86,16 +75,19 @@ export default function ListingModal({
 
           <div className="p-6 md:p-8">
             <div className="flex items-start justify-between gap-4 mb-1">
-              <h2 className="font-display text-2xl">{listing.locality || listing.title || 'Untitled listing'}</h2>
+              <h2 className="font-display text-2xl">{listing.nickname || listing.locality || listing.title || 'Untitled listing'}</h2>
               <button
                 onClick={onToggleLove}
-                className="w-11 h-11 rounded-full flex items-center justify-center text-xl flex-shrink-0"
+                className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ border: '1px solid var(--border)' }}
                 aria-label={loved ? 'Unlove' : 'Love'}
               >
-                {loved ? '❤️' : '🤍'}
+                <HeartIcon filled={loved} size={20} />
               </button>
             </div>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>
+              {listing.locality}
+            </p>
             {(listing.bhk || listing.rent) && (
               <p
                 className="text-xs font-medium mb-4 inline-block px-2.5 py-1 rounded-full"

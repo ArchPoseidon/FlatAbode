@@ -82,17 +82,17 @@ export default function OnboardingFlow({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">BHK</label>
+              <label className="block text-sm font-medium mb-2">BHK (pick any that work)</label>
               <div className="flex gap-2 flex-wrap">
                 {o.bhkOptions.map((b) => (
                   <button
                     key={b}
-                    onClick={() => o.setBhk(b)}
+                    onClick={() => o.toggleBhk(b)}
                     className="px-4 py-2 rounded-full text-sm font-medium"
                     style={{
                       border: '1px solid var(--border)',
-                      background: o.bhk === b ? 'var(--accent)' : 'var(--card)',
-                      color: o.bhk === b ? 'var(--accent-foreground)' : 'var(--text-primary)',
+                      background: o.bhk.includes(b) ? 'var(--accent)' : 'var(--card)',
+                      color: o.bhk.includes(b) ? 'var(--accent-foreground)' : 'var(--text-primary)',
                     }}
                   >
                     {b} BHK
@@ -232,7 +232,9 @@ export default function OnboardingFlow({
             <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>
               Budget
             </p>
-            <p className="font-medium mb-4">₹{o.budget.toLocaleString('en-IN')} · {o.bhk} BHK</p>
+            <p className="font-medium mb-4">
+              ₹{o.budget.toLocaleString('en-IN')} · {o.bhk.length ? `${o.bhk.join('/')} BHK` : 'Any BHK'}
+            </p>
             <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>
               Areas
             </p>

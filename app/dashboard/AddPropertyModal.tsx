@@ -1,44 +1,71 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { useAddListing } from '@/lib/use-add-listing';
 import { BHK_OPTIONS } from '@/lib/types';
+import type { Listing } from '@/lib/dashboard-types';
 
-export default function ShareProperty() {
-  const router = useRouter();
-  const o = useAddListing();
+export default function AddPropertyModal({
+  onClose,
+  onAdded,
+}: {
+  onClose: () => void;
+  onAdded: (listing: Listing) => void;
+}) {
+  const o = useAddListing((listing) => onAdded(listing));
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-lg">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center p-0 md:p-8"
+      style={{ background: 'rgba(10,8,6,0.65)' }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full md:max-w-lg md:rounded-[1.75rem] overflow-y-auto p-6 md:p-8"
+        style={{ background: 'var(--card)', maxHeight: '92vh' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {o.done ? (
-          <div className="fa-rise text-center">
-            <h1 className="font-display text-3xl mb-3">Added</h1>
-            <p className="text-sm mb-8" style={{ color: 'var(--text-muted)' }}>
+          <div className="fa-rise text-center py-6">
+            <h2 className="font-display text-2xl mb-2">Added</h2>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
               It&apos;s on the dashboard now, scored against everyone&apos;s preferences.
             </p>
             <div className="flex justify-center gap-3">
               <button className="btn-ghost" onClick={o.reset}>
                 Add another
               </button>
-              <button className="btn-primary" onClick={() => router.push('/dashboard')}>
-                Go to dashboard →
+              <button className="btn-primary" onClick={onClose}>
+                Done
               </button>
             </div>
           </div>
         ) : (
-          <div className="fa-rise">
-            <h1 className="font-display text-3xl mb-2 text-center">Found a place already?</h1>
-            <p className="text-sm mb-8 text-center" style={{ color: 'var(--text-muted)' }}>
-              Paste a link from any listing site and we&apos;ll pull the details in automatically.
+          <>
+            <div className="flex items-start justify-between gap-4 mb-1">
+              <h2 className="font-display text-2xl">Add a property</h2>
+              <button
+                onClick={onClose}
+                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ border: '1px solid var(--border)' }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+              Paste a link and we&apos;ll pull the details in automatically.
             </p>
 
-            <div className="flex justify-center gap-2 mb-6">
+            <div className="flex gap-2 mb-6">
               <button
                 className="px-4 py-2 rounded-full text-sm font-medium"
                 style={{
                   border: '1px solid var(--border)',
-                  background: o.mode === 'url' ? 'var(--accent)' : 'var(--card)',
+                  background: o.mode === 'url' ? 'var(--accent)' : 'var(--bg)',
                   color: o.mode === 'url' ? 'var(--accent-foreground)' : 'var(--text-primary)',
                 }}
                 onClick={() => o.setMode('url')}
@@ -49,7 +76,7 @@ export default function ShareProperty() {
                 className="px-4 py-2 rounded-full text-sm font-medium"
                 style={{
                   border: '1px solid var(--border)',
-                  background: o.mode === 'manual' ? 'var(--accent)' : 'var(--card)',
+                  background: o.mode === 'manual' ? 'var(--accent)' : 'var(--bg)',
                   color: o.mode === 'manual' ? 'var(--accent-foreground)' : 'var(--text-primary)',
                 }}
                 onClick={() => o.setMode('manual')}
@@ -128,19 +155,9 @@ export default function ShareProperty() {
                 </button>
               </div>
             )}
-
-            <div className="text-center mt-8">
-              <button
-                className="text-sm"
-                style={{ color: 'var(--text-muted)' }}
-                onClick={() => router.push('/dashboard')}
-              >
-                Skip for now →
-              </button>
-            </div>
-          </div>
+          </>
         )}
       </div>
-    </main>
+    </motion.div>
   );
 }

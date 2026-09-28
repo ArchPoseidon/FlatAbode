@@ -29,9 +29,9 @@ export function scoreListing(prefs: Preferences, fields: ExtractedListingFields)
     else if (fields.rent > prefs.budget_max) unmet.push('budget');
   }
 
-  if (prefs.bhk && prefs.bhk !== 'any') {
+  if (prefs.bhk.length > 0) {
     if (!fields.bhk) unverified.push('bhk');
-    else if (fields.bhk !== prefs.bhk) unmet.push('bhk');
+    else if (!prefs.bhk.includes(fields.bhk)) unmet.push('bhk');
   }
 
   if (prefs.locations.length > 0) {
@@ -65,4 +65,10 @@ export function scoreListing(prefs: Preferences, fields: ExtractedListingFields)
     unverified_must_haves: unverified,
     nice_to_haves_met: niceToHavesMet,
   };
+}
+
+// What a member wanted as a nice-to-have that this listing doesn't confirm —
+// framed as what they'd be compromising on to live here.
+export function computeCompromises(memberNiceToHaves: string[], niceToHavesMet: string[]): string[] {
+  return memberNiceToHaves.filter((k) => !niceToHavesMet.includes(k));
 }
