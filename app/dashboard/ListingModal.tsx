@@ -5,13 +5,14 @@ import { motion } from 'framer-motion';
 import CoverPlaceholder from '@/components/CoverPlaceholder';
 import HeartIcon from '@/components/HeartIcon';
 import type { Listing, ListingScoreRow, ListingNoteRow, Member } from '@/lib/dashboard-types';
-import { labelFor as label } from '@/lib/types';
+import { labelFor as label, getConfirmedAmenities } from '@/lib/types';
 
 export default function ListingModal({
   listing,
   scores,
   notes,
   members,
+  compromises,
   loved,
   onClose,
   onToggleLove,
@@ -21,6 +22,7 @@ export default function ListingModal({
   scores: ListingScoreRow[];
   notes: ListingNoteRow[];
   members: Member[];
+  compromises: { name: string; missing: string[] }[];
   loved: boolean;
   onClose: () => void;
   onToggleLove: () => void;
@@ -30,6 +32,7 @@ export default function ListingModal({
   const [posting, setPosting] = useState(false);
   const photos = listing.photos?.length ? listing.photos : listing.cover_photo ? [listing.cover_photo] : [];
   const memberName = (id: string) => members.find((m) => m.id === id)?.name ?? 'Someone';
+  const confirmedAmenities = getConfirmedAmenities((listing.extracted_fields ?? {}) as Record<string, unknown>);
 
   async function submitNote() {
     if (!noteText.trim()) return;
@@ -113,6 +116,25 @@ export default function ListingModal({
               </a>
             )}
 
+            {confirmedAmenities.length > 0 && (
+              <div className="mb-6">
+                <p className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Amenities confirmed
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {confirmedAmenities.map((k) => (
+                    <span
+                      key={k}
+                      className="text-xs px-3 py-1 rounded-full"
+                      style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}
+                    >
+                      {label(k)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3 mb-6">
               <p className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
                 How it stacks up, per person
@@ -141,10 +163,17 @@ export default function ListingModal({
                     </p>
                   )}
                   {s.nice_to_haves_met.length > 0 && (
-                    <p className="text-xs" style={{ color: 'var(--success)' }}>
+                    <p className="text-xs mb-1" style={{ color: 'var(--success)' }}>
                       Bonus: {s.nice_to_haves_met.map(label).join(', ')}
                     </p>
                   )}
+                  {compromises
+                    .filter((c) => c.name === memberName(s.member_id))
+                    .map((c) => (
+                      <p key={c.name} className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        Gives up: {c.missing.map(label).join(', ')}
+                      </p>
+                    ))}
                 </div>
               ))}
             </div>

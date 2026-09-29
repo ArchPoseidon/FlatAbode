@@ -3,10 +3,8 @@
 import { motion } from 'framer-motion';
 import CoverPlaceholder from '@/components/CoverPlaceholder';
 import HeartIcon from '@/components/HeartIcon';
-import { labelFor, MUST_HAVE_AMENITIES } from '@/lib/types';
+import { labelFor, getConfirmedAmenities } from '@/lib/types';
 import type { Listing } from '@/lib/dashboard-types';
-
-const MUST_HAVE_KEYS = MUST_HAVE_AMENITIES.map((a) => a.key);
 
 export default function ListingCard({
   listing,
@@ -32,10 +30,7 @@ export default function ListingCard({
     .join(' · ');
 
   const fields = (listing.extracted_fields ?? {}) as Record<string, unknown>;
-  const confirmedAmenities = [
-    ...MUST_HAVE_KEYS.filter((k) => fields[k] === true),
-    ...((Array.isArray(fields.amenities) ? (fields.amenities as string[]) : [])),
-  ];
+  const confirmedAmenities = getConfirmedAmenities(fields);
 
   return (
     <motion.div

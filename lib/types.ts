@@ -58,6 +58,17 @@ export function labelFor(key: string): string {
   return LABELS[key] ?? key;
 }
 
+const MUST_HAVE_KEYS = MUST_HAVE_AMENITIES.map((a) => a.key);
+
+// Every amenity a listing's scraped data actually confirms — the must-have
+// booleans that came back true, plus whichever nice-to-have keys were spotted.
+export function getConfirmedAmenities(fields: Record<string, unknown>): string[] {
+  return [
+    ...MUST_HAVE_KEYS.filter((k) => fields[k] === true),
+    ...(Array.isArray(fields.amenities) ? (fields.amenities as string[]) : []),
+  ];
+}
+
 // Extraction sometimes returns "3 BHK" instead of "3" despite the prompt —
 // normalize to just the leading number (or "4+") so matching stays exact.
 export function normalizeBhk(value: string | null | undefined): string | null {

@@ -201,6 +201,7 @@ export default function Dashboard({
             scores={data.scores.filter((s) => s.listing_id === openListing.id)}
             notes={data.notes.filter((n) => n.listing_id === openListing.id)}
             members={data.members}
+            compromises={compromisesByListing.get(openListing.id) ?? []}
             loved={lovedIds.has(openListing.id)}
             onClose={() => setOpenListingId(null)}
             onToggleLove={() => toggleLove(openListing.id)}
