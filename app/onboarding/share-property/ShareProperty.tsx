@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAddListing } from '@/lib/use-add-listing';
 import { BHK_OPTIONS } from '@/lib/types';
+import BrandMark from '@/components/BrandMark';
 
 export default function ShareProperty() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function ShareProperty() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-lg">
+        <BrandMark className="text-center mb-8" />
         {o.done ? (
           <div className="fa-rise text-center">
             <h1 className="font-display text-3xl mb-3">Added</h1>

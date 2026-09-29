@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useOnboarding } from '@/lib/use-onboarding';
 import type { Preferences } from '@/lib/types';
+import BrandMark from '@/components/BrandMark';
 
 export default function ProfileSettings({
   memberName,
@@ -50,6 +51,7 @@ export default function ProfileSettings({
   return (
     <main className="min-h-screen px-6 py-12 md:py-16 flex justify-center">
       <div className="w-full max-w-lg">
+        <BrandMark className="mb-6" />
         <a href="/dashboard" className="text-sm inline-block mb-6" style={{ color: 'var(--text-muted)' }}>
           ← Back to dashboard
         </a>

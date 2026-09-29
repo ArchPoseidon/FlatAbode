@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import BrandMark from '@/components/BrandMark';
 
 type Step = 'intro' | 'count' | 'names' | 'reveal';
 
@@ -73,9 +74,7 @@ export default function LandingWizard({ invalidLink }: { invalidLink: boolean })
   return (
     <main className="relative min-h-screen flex items-center justify-center px-6 py-16 overflow-hidden">
       <div className="relative w-full max-w-md">
-        <p className="font-display text-lg text-center mb-8" style={{ color: 'var(--text-primary)' }}>
-          FlatAbode
-        </p>
+        <BrandMark className="text-center mb-8" size="lg" />
         {invalidLink && step === 'intro' && (
           <p className="mb-6 text-sm text-center card" style={{ borderColor: 'var(--accent)' }}>
             That link didn&apos;t match anyone. If a flatmate shared it, ask them to resend it.

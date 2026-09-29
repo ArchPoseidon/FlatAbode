@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import BrandMark from '@/components/BrandMark';
 import ListingCard from './ListingCard';
 import ListingModal from './ListingModal';
 import AddPropertyModal from './AddPropertyModal';
@@ -111,7 +112,7 @@ export default function Dashboard({
         style={{ borderRight: '1px solid var(--border)', background: 'var(--bg)' }}
       >
         <div>
-          <p className="font-display text-xl mb-8">FlatAbode</p>
+          <BrandMark className="mb-8" />
           <nav className="flex flex-col gap-1">
             <button
               onClick={() => setTab('all')}

@@ -1,13 +1,8 @@
 'use client';
 
 import { useOnboarding, ONBOARDING_STEPS } from '@/lib/use-onboarding';
-import { MUST_HAVE_AMENITIES, NICE_TO_HAVE_TILES, type Preferences } from '@/lib/types';
-
-const LABELS: Record<string, string> = Object.fromEntries([
-  ...MUST_HAVE_AMENITIES.map((a) => [a.key, a.label]),
-  ...NICE_TO_HAVE_TILES.map((t) => [t.key, t.label]),
-]);
-const label = (key: string) => LABELS[key] ?? key;
+import { labelFor as label, type Preferences } from '@/lib/types';
+import BrandMark from '@/components/BrandMark';
 
 const STEP_TITLES: Record<string, string> = {
   welcome: 'Let’s find what matters to you',
@@ -29,6 +24,7 @@ export default function OnboardingFlow({
   return (
     <main className="min-h-screen flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-lg">
+        <BrandMark className="text-center mb-8" />
         {o.step !== 'welcome' && (
           <div className="mb-8">
             <p className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>
