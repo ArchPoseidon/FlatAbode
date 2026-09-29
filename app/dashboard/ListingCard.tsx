@@ -11,6 +11,7 @@ export default function ListingCard({
   loved,
   qualifies,
   compromises,
+  missingMustHaves,
   onOpen,
   onToggleLove,
 }: {
@@ -18,6 +19,7 @@ export default function ListingCard({
   loved: boolean;
   qualifies: boolean;
   compromises: { name: string; missing: string[] }[];
+  missingMustHaves: { name: string; missing: string[] }[];
   onOpen: () => void;
   onToggleLove: () => void;
 }) {
@@ -58,14 +60,12 @@ export default function ListingCard({
         >
           <HeartIcon filled={loved} />
         </button>
-        {qualifies && (
-          <span
-            className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full"
-            style={{ background: 'var(--success)', color: 'white' }}
-          >
-            Matches everyone
-          </span>
-        )}
+        <span
+          className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full"
+          style={{ background: qualifies ? 'var(--success)' : 'rgba(0,0,0,0.55)', color: 'white' }}
+        >
+          {qualifies ? 'Matches everyone' : 'Missing something'}
+        </span>
       </div>
       <div className="p-4">
         <p className="font-display text-lg leading-tight">{listing.nickname || area}</p>
@@ -87,8 +87,21 @@ export default function ListingCard({
           </div>
         )}
 
-        {compromises.length > 0 && (
+        {missingMustHaves.length > 0 && (
           <div className="mt-3 pt-3 flex flex-col gap-1" style={{ borderTop: '1px solid var(--border)' }}>
+            {missingMustHaves.map((m) => (
+              <p key={m.name} className="text-xs" style={{ color: 'var(--accent)' }}>
+                <span className="font-medium">{m.name}</span>&apos;s must-haves missing: {m.missing.map(labelFor).join(', ')}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {compromises.length > 0 && (
+          <div
+            className="mt-3 pt-3 flex flex-col gap-1"
+            style={missingMustHaves.length === 0 ? { borderTop: '1px solid var(--border)' } : undefined}
+          >
             {compromises.map((c) => (
               <p key={c.name} className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 <span className="font-medium">{c.name}</span> gives up: {c.missing.map(labelFor).join(', ')}

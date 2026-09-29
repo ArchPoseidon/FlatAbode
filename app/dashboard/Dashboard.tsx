@@ -63,9 +63,26 @@ export default function Dashboard({
     return map;
   }, [data.scores, data.preferences, data.members]);
 
+  // Per listing, which onboarded members have a must-have this listing doesn't confirm —
+  // shown instead of hiding the listing outright, so the group can still see and discuss it.
+  const missingMustHavesByListing = useMemo(() => {
+    const map = new Map<string, { name: string; missing: string[] }[]>();
+    for (const score of data.scores) {
+      const member = data.members.find((m) => m.id === score.member_id);
+      if (!member || score.unmet_must_haves.length === 0) continue;
+      const list = map.get(score.listing_id) ?? [];
+      list.push({ name: member.name, missing: score.unmet_must_haves });
+      map.set(score.listing_id, list);
+    }
+    return map;
+  }, [data.scores, data.members]);
+
   const readyListings = data.listings.filter((l) => l.status === 'ready');
+  const matchingCount = readyListings.filter((l) => qualifiedIds.has(l.id)).length;
   const visibleListings =
-    tab === 'all' ? readyListings.filter((l) => qualifiedIds.has(l.id)) : readyListings.filter((l) => lovedIds.has(l.id));
+    tab === 'all'
+      ? [...readyListings].sort((a, b) => Number(qualifiedIds.has(b.id)) - Number(qualifiedIds.has(a.id)))
+      : readyListings.filter((l) => lovedIds.has(l.id));
 
   const openListing = openListingId ? data.listings.find((l) => l.id === openListingId) ?? null : null;
 
@@ -160,20 +177,20 @@ export default function Dashboard({
 
       <main className="relative z-10 flex-1 flex flex-col">
         <div className="p-6 md:p-10">
-          <h1 className="font-display text-3xl mb-1">
-            {tab === 'all' ? 'Properties everyone agrees on' : 'Properties you loved'}
-          </h1>
+          <h1 className="font-display text-3xl mb-1">{tab === 'all' ? 'All properties' : 'Properties you loved'}</h1>
           <p className="text-sm mb-8" style={{ color: 'var(--text-muted)' }}>
             {onboardedCount < data.members.length
               ? `${data.members.length - onboardedCount} of your group still haven't finished onboarding.`
-              : `Matched across all ${onboardedCount} of you · Combined budget ₹${combinedBudget.toLocaleString('en-IN')}/month`}
+              : tab === 'all'
+                ? `${matchingCount} of ${readyListings.length} match everyone's must-haves · Combined budget ₹${combinedBudget.toLocaleString('en-IN')}/month`
+                : `Matched across all ${onboardedCount} of you · Combined budget ₹${combinedBudget.toLocaleString('en-IN')}/month`}
           </p>
 
           {visibleListings.length === 0 ? (
             <div className="card max-w-md">
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                 {tab === 'all'
-                  ? 'Nothing qualifies for everyone yet — add a property to get started.'
+                  ? 'No properties added yet — add one to get started.'
                   : "You haven't loved anything yet — tap the heart on a card to save it here."}
               </p>
             </div>
@@ -186,6 +203,7 @@ export default function Dashboard({
                   loved={lovedIds.has(listing.id)}
                   qualifies={qualifiedIds.has(listing.id)}
                   compromises={compromisesByListing.get(listing.id) ?? []}
+                  missingMustHaves={missingMustHavesByListing.get(listing.id) ?? []}
                   onOpen={() => setOpenListingId(listing.id)}
                   onToggleLove={() => toggleLove(listing.id)}
                 />
