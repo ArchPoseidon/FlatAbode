@@ -13,9 +13,13 @@ export async function rescoreListing(listingId: string, groupId: string, fields:
   const { data: preferences } = await supabase.from('preferences').select('*').in('member_id', memberIds);
   if (!preferences || preferences.length === 0) return;
 
+  // Pooled budget: everyone in the group splits the rent, so what matters is
+  // the sum of every onboarded member's budget, not any one person's number.
+  const groupBudgetMax = preferences.reduce((sum, row) => sum + (row.budget_max ?? 0), 0);
+
   const rows = preferences.map((row) => {
     const prefs = row as Preferences;
-    const score = scoreListing(prefs, fields);
+    const score = scoreListing(prefs, fields, groupBudgetMax);
     return {
       listing_id: listingId,
       member_id: prefs.member_id,

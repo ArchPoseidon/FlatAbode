@@ -20,13 +20,20 @@ export interface ListingScore {
   nice_to_haves_met: string[];
 }
 
-export function scoreListing(prefs: Preferences, fields: ExtractedListingFields): ListingScore {
+export function scoreListing(
+  prefs: Preferences,
+  fields: ExtractedListingFields,
+  groupBudgetMax: number | null
+): ListingScore {
   const unmet: string[] = [];
   const unverified: string[] = [];
 
-  if (prefs.budget_max != null) {
+  // Budget is a shared, pooled constraint (everyone splits the rent), not an
+  // individual one — so rent is checked against the sum of the group's
+  // budgets, not any one member's number alone.
+  if (groupBudgetMax != null) {
     if (fields.rent == null) unverified.push('budget');
-    else if (fields.rent > prefs.budget_max) unmet.push('budget');
+    else if (fields.rent > groupBudgetMax) unmet.push('budget');
   }
 
   if (prefs.bhk.length > 0) {

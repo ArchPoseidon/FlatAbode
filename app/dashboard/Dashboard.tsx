@@ -25,6 +25,7 @@ export default function Dashboard({
   const [showAddModal, setShowAddModal] = useState(false);
 
   const onboardedCount = data.members.filter((m) => m.onboarded_at).length;
+  const combinedBudget = data.preferences.reduce((sum, p) => sum + (p.budget_max ?? 0), 0);
 
   const qualifiedIds = useMemo(() => {
     const byListing = new Map<string, ListingScoreRow[]>();
@@ -164,7 +165,7 @@ export default function Dashboard({
           <p className="text-sm mb-8" style={{ color: 'var(--text-muted)' }}>
             {onboardedCount < data.members.length
               ? `${data.members.length - onboardedCount} of your group still haven't finished onboarding.`
-              : `Matched across all ${onboardedCount} of you.`}
+              : `Matched across all ${onboardedCount} of you · Combined budget ₹${combinedBudget.toLocaleString('en-IN')}/month`}
           </p>
 
           {visibleListings.length === 0 ? (
