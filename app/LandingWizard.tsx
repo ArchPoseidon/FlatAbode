@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import BrandMark from '@/components/BrandMark';
+import ScrollStory from '@/components/ScrollStory';
+import LandingBackdrop from '@/components/LandingBackdrop';
 
 type Step = 'intro' | 'count' | 'names' | 'reveal';
 
@@ -72,9 +74,11 @@ export default function LandingWizard({ invalidLink }: { invalidLink: boolean })
   }
 
   return (
+    <>
+    <LandingBackdrop />
     <main className="relative min-h-screen flex items-center justify-center px-6 py-16 overflow-hidden">
       <div className="relative w-full max-w-md">
-        <BrandMark className="text-center mb-8" size="lg" />
+        <BrandMark className="text-center mb-8" size={step === 'intro' ? 'xl' : 'lg'} />
         {invalidLink && step === 'intro' && (
           <p className="mb-6 text-sm text-center card" style={{ borderColor: 'var(--accent)' }}>
             That link didn&apos;t match anyone. If a flatmate shared it, ask them to resend it.
@@ -83,9 +87,6 @@ export default function LandingWizard({ invalidLink }: { invalidLink: boolean })
 
         {step === 'intro' && (
           <div className="fa-rise text-center">
-            <p className="text-sm tracking-wide uppercase mb-3" style={{ color: 'var(--text-muted)' }}>
-              Bangalore
-            </p>
             <h1 className="font-display text-5xl leading-[1.05] mb-4">
               Find your new <em className="italic">Abode</em>, together.
             </h1>
@@ -206,5 +207,14 @@ export default function LandingWizard({ invalidLink }: { invalidLink: boolean })
         )}
       </div>
     </main>
+    {step === 'intro' && (
+      <ScrollStory
+        onStart={() => {
+          setStep('count');
+          window.scrollTo({ top: 0 });
+        }}
+      />
+    )}
+    </>
   );
 }

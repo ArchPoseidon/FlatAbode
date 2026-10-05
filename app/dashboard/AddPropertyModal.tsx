@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useAddListing } from '@/lib/use-add-listing';
 import { BHK_OPTIONS } from '@/lib/types';
+import UrlTip from '@/components/UrlTip';
 import type { Listing } from '@/lib/dashboard-types';
 
 export default function AddPropertyModal({
@@ -89,10 +90,11 @@ export default function AddPropertyModal({
               <div className="flex flex-col gap-4">
                 <input
                   className="input"
-                  placeholder="https://www.99acres.com/…"
+                  placeholder="https://www.nobroker.in/…"
                   value={o.url}
                   onChange={(e) => o.setUrl(e.target.value)}
                 />
+                <UrlTip />
                 {o.error && (
                   <p className="text-sm" style={{ color: 'var(--accent)' }}>
                     {o.error}

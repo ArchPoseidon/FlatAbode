@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAddListing } from '@/lib/use-add-listing';
 import { BHK_OPTIONS } from '@/lib/types';
+import UrlTip from '@/components/UrlTip';
 import BrandMark from '@/components/BrandMark';
 
 export default function ShareProperty() {
@@ -64,10 +65,11 @@ export default function ShareProperty() {
               <div className="flex flex-col gap-4">
                 <input
                   className="input"
-                  placeholder="https://www.99acres.com/…"
+                  placeholder="https://www.nobroker.in/…"
                   value={o.url}
                   onChange={(e) => o.setUrl(e.target.value)}
                 />
+                <UrlTip />
                 {o.error && (
                   <p className="text-sm" style={{ color: 'var(--accent)' }}>
                     {o.error}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import BrandMark from '@/components/BrandMark';
 import ListingCard from './ListingCard';
 import ListingModal from './ListingModal';
@@ -196,9 +196,15 @@ export default function Dashboard({
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {visibleListings.map((listing) => (
-                <ListingCard
+              {visibleListings.map((listing, i) => (
+                <motion.div
                   key={listing.id}
+                  initial={{ opacity: 0, y: 32 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-8% 0px' }}
+                  transition={{ type: 'spring', stiffness: 120, damping: 20, delay: (i % 2) * 0.08 }}
+                >
+                <ListingCard
                   listing={listing}
                   loved={lovedIds.has(listing.id)}
                   qualifies={qualifiedIds.has(listing.id)}
@@ -207,6 +213,7 @@ export default function Dashboard({
                   onOpen={() => setOpenListingId(listing.id)}
                   onToggleLove={() => toggleLove(listing.id)}
                 />
+                </motion.div>
               ))}
             </div>
           )}
